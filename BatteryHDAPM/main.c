@@ -29,11 +29,41 @@ static io_object_t g_notifierObject;
 
 static void cleanup();
 
+#ifdef DEBUG
+void log_info(const char* format, ... ) {
+    va_list args;
+    va_start(args, format);
+    vsyslog(LOG_NOTICE, format, args);
+    va_end(args);
+}
+#endif
+
 void setAPMLevel(int level)
 {
     CFNumberRef cfLevel = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &level);
+#ifdef DEBUG
+    kern_return_t r = IORegistryEntrySetCFProperty(g_hdd, CFSTR("APM Level"), cfLevel);
+#else
     (void) IORegistryEntrySetCFProperty(g_hdd, CFSTR("APM Level"), cfLevel);
+#endif
     CFRelease(cfLevel);
+
+#ifdef DEBUG
+    const char *result;
+    if (r)
+    {
+        if (r == kIOReturnUnsupported)
+            result = "FAILED: APM not supported";
+        else if (r == kIOReturnNotPrivileged)
+            result = "FAILED: Permission denied";
+        else
+            result = "FAILED";
+    }
+    else
+        result = "Success";
+    
+    log_info("  Set APM Level to 0x%02x: %s\n", level, result);
+#endif
 }
 
 io_object_t find_ata_device(io_object_t device)
