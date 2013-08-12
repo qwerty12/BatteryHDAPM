@@ -18,7 +18,7 @@
 #include <IOKit/ps/IOPSKeys.h>
 #include <IOKit/IOMessage.h>
 
-static bool g_prevBatteryState = false;
+static bool g_prevBatteryState = true;
 static bool g_force = false;
 
 static io_object_t g_hdd;
@@ -106,7 +106,7 @@ io_object_t getATADeviceForBSDPath(const char* path)
 
 static void powerStateWatcher(__unused void *param_not_used)
 {
-    bool usingBattery = false;
+    bool usingBattery = g_prevBatteryState;
     
     CFTypeRef source = IOPSCopyPowerSourcesInfo();
     CFArrayRef powerSources = IOPSCopyPowerSourcesList(source);
